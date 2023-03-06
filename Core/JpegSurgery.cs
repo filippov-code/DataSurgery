@@ -11,12 +11,17 @@ namespace Core
 {
     public class JpegSurgery
     {
+        private FileInfo fileInfo;
         private Bitmap bitmap;
         public readonly int FreeSpace;
         public readonly int Degree;
 
+        public List<short> tmpBeforeSave = new();
+        public List<short> tmpAfterSave = new();
+
         public JpegSurgery(string path, int degree = 1)
         {
+            fileInfo = new FileInfo(path);
             bitmap = new Bitmap(path);
 
             FreeSpace = bitmap.Width * bitmap.Height * 3;
@@ -26,52 +31,51 @@ namespace Core
 
         public byte[] HideWithLSB(byte[] message)
         {
-            string path = @"test.jpg";
-            var img = new Bitmap(path);
-            var jo = img.Width;
-            var joj = img.Height;
-            BitMiracle.LibJpeg.Classic.jpeg_decompress_struct oJpegDecompress = new BitMiracle.LibJpeg.Classic.jpeg_decompress_struct();
-            FileStream oFileStreamImage = new FileStream(path, FileMode.Open, FileAccess.Read);
-            oJpegDecompress.jpeg_stdio_src(oFileStreamImage);
-            oJpegDecompress.jpeg_read_header(true);
-            BitMiracle.LibJpeg.Classic.jvirt_array<BitMiracle.LibJpeg.Classic.JBLOCK>[] JBlock = oJpegDecompress.jpeg_read_coefficients();
-            var ll = JBlock[0].Access(0, 1); // accessing the element
-            Console.WriteLine(JBlock.Length);
-            var oo = 5; // its gonna be new value for coefficient
-            for (int i = 0; i < 64; i++) // some cycle
+            Console.WriteLine("||||| HideWithLSB |||||");
+            BitMiracle.LibJpeg.Classic.jpeg_decompress_struct jpegDecompress = new BitMiracle.LibJpeg.Classic.jpeg_decompress_struct();
+            FileStream fs = new FileStream(fileInfo.FullName, FileMode.Open, FileAccess.Read);
+            jpegDecompress.jpeg_stdio_src(fs);
+            jpegDecompress.jpeg_read_header(true);
+            BitMiracle.LibJpeg.Classic.jvirt_array<BitMiracle.LibJpeg.Classic.JBLOCK>[] components = jpegDecompress.jpeg_read_coefficients();
+            var YComponent = components[0].Access(0, bitmap.Height/8);
+            BitArray messageBits = new BitArray(message);
+            int bitsIndex = 0;
+            for (int y = 0; y < bitmap.Height/8; y++) // some cycle
             {
-                ll[0][i][63] = Convert.ToInt16(oo); // changes
-                //Jblock[].Access(с какой строки начать, сколько строк 8х8 взять)
-                //ll[строка из блоков 8х8][блок 8х8 по порядку][пиксель в блоке 8х8 по порядку]
+                if (bitsIndex == messageBits.Count)
+                    break;
+
+                for (int x = 0; x < bitmap.Width/8; x++)
+                {
+                    if (bitsIndex == messageBits.Count)
+                        break;
+
+                    short newValue = Convert.ToInt16(SetBit(YComponent[y][x][0], 7, messageBits[bitsIndex++]));
+                    //Console.WriteLine($"{YComponent[y][x][0]}-{messageBits[bitsIndex-1]}-{newValue}");
+                    //if (Math.Abs(newValue - YComponent[y][x][0]) > 1) Console.WriteLine("caramba");
+                    tmpBeforeSave.Add(newValue);
+                    YComponent[y][x][0] = newValue;
+                    //if (bitsIndex < 20) Console.Write(YComponent[y][x][0] + ", ");
+                }
             }
-            oJpegDecompress.jpeg_finish_decompress();
-            oFileStreamImage.Close();
-            return null;
+            //Jblock[индекс компоненты (0-2)].Access(с какой строки начать, сколько строк 8х8 взять)
+            //ll[строка из блоков 8х8][блок 8х8 по порядку][пиксель в блоке 8х8 по порядку]
+            jpegDecompress.jpeg_finish_decompress();
+            fs.Close();
+            //return null;
             /////
             FileStream objFileStreamMegaMap = File.Create("test_dct.jpg");
             BitMiracle.LibJpeg.Classic.jpeg_compress_struct oJpegCompress = new BitMiracle.LibJpeg.Classic.jpeg_compress_struct();
             oJpegCompress.jpeg_stdio_dest(objFileStreamMegaMap);
-            oJpegDecompress.jpeg_copy_critical_parameters(oJpegCompress);
-            oJpegCompress.Image_height = joj;
-            oJpegCompress.Image_width = jo;
-            oJpegCompress.jpeg_write_coefficients(JBlock);
+            jpegDecompress.jpeg_copy_critical_parameters(oJpegCompress);
+            oJpegCompress.Image_height = bitmap.Height;
+            oJpegCompress.Image_width = bitmap.Width;
+            oJpegCompress.jpeg_write_coefficients(components);
             oJpegCompress.jpeg_finish_compress();
             objFileStreamMegaMap.Close();
-            oJpegDecompress.jpeg_abort_decompress();
-            oFileStreamImage.Close();
-            return null;
-        }
-
-        private ImageCodecInfo GetEncoder(ImageFormat format)
-        {
-            ImageCodecInfo[] codecs = ImageCodecInfo.GetImageDecoders();
-            foreach (ImageCodecInfo codec in codecs)
-            {
-                if (codec.FormatID == format.Guid)
-                {
-                    return codec;
-                }
-            }
+            jpegDecompress.jpeg_abort_decompress();
+            fs.Close();
+            Console.WriteLine();
             return null;
         }
 
@@ -86,55 +90,46 @@ namespace Core
 
         public byte[] FindLSB(int bitsCount)
         {
-            Console.WriteLine(@"||||| FindLSB |||||");
-            int bitsIndex = 0;
+            Console.WriteLine("||||| FindLSB |||||");
+            BitMiracle.LibJpeg.Classic.jpeg_decompress_struct jpegDecompress = new BitMiracle.LibJpeg.Classic.jpeg_decompress_struct();
+            FileStream fs = new FileStream(fileInfo.FullName, FileMode.Open, FileAccess.Read);
+            jpegDecompress.jpeg_stdio_src(fs);
+            jpegDecompress.jpeg_read_header(true);
+            BitMiracle.LibJpeg.Classic.jvirt_array<BitMiracle.LibJpeg.Classic.JBLOCK>[] components = jpegDecompress.jpeg_read_coefficients();
+            var YComponent = components[0].Access(0, bitmap.Height / 8);
             bool[] messageValues = new bool[bitsCount];
-            for (int y = 0; y < bitmap.Height; y++)
+            int bitsIndex = 0;
+            for (int y = 0; y < bitmap.Height / 8; y++) // some cycle
             {
                 if (bitsIndex == bitsCount)
                     break;
 
-                for (int x = 0; x < bitmap.Width; x++)
+                for (int x = 0; x < bitmap.Width / 8; x++)
                 {
                     if (bitsIndex == bitsCount)
                         break;
 
-                    Color pixel = bitmap.GetPixel(x, y);
-                    for (int i = Degree - 1; i >= 0; i--)
-                    {
-                        if (bitsIndex == bitsCount)
-                            break;
-
-                        messageValues[bitsIndex++] = GetBit(pixel.R, 7 - i);
-                    }
-                    for (int i = Degree - 1; i >= 0; i--)
-                    {
-                        if (bitsIndex == bitsCount)
-                            break;
-
-                        messageValues[bitsIndex++] = GetBit(pixel.G, 7 - i);
-                    }
-                    for (int i = Degree - 1; i >= 0; i--)
-                    {
-                        if (bitsIndex == bitsCount)
-                            break;
-
-                        messageValues[bitsIndex++] = GetBit(pixel.B, 7 - i);
-                    }
+                    Console.WriteLine($"value: {YComponent[y][x][0]} lbit: {GetBit(YComponent[y][x][0], 7)}");
+                    messageValues[bitsIndex++] = GetBit(YComponent[y][x][0], 7);
                 }
             }
-            BitArray bits = new BitArray(messageValues);
-            Console.WriteLine("bits finded: " + bits.Count);
-            byte[] bytes = new byte[bits.Length / 8];
-            bits.CopyTo(bytes, 0);
-            Console.WriteLine("bytes finded: " + bytes.Length);
+            //Jblock[индекс компоненты (0-2)].Access(с какой строки начать, сколько строк 8х8 взять)
+            //ll[строка из блоков 8х8][блок 8х8 по порядку][пиксель в блоке 8х8 по порядку]
+            jpegDecompress.jpeg_finish_decompress();
+            fs.Close();
+
+            BitArray messageBits = new BitArray(messageValues);
+            if (bitsIndex != messageBits.Count) Console.WriteLine("suka");
+            byte[] bytes = new byte[bitsCount / 8];
+            messageBits.CopyTo(bytes, 0);
+            Console.WriteLine();
             return bytes;
         }
 
         public static bool GetBit(int value, int index)
         {
             value >>= (7 - index);
-            return value % 2 == 1;
+            return Math.Abs(value % 2) == 1;
         }
     }
 }

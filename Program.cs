@@ -5,20 +5,24 @@ using System.Drawing.Imaging;
 using Core;
 
 
+//int t = -91;
+//Console.WriteLine(Convert.ToString(-91, 2));
+//return;
 
-int degree = 8;
+int degree = 1;
 JpegSurgery jpeg = new JpegSurgery("jpeg.jpg", degree);
 byte[] message = File.ReadAllBytes("message.txt");
 byte[] hidden = jpeg.HideWithLSB(message);
-return;
-File.WriteAllBytes("hidden.jpg", hidden);
-JpegSurgery hiddenJpeg = new JpegSurgery("hidden.jpg", degree);
+//return;
+//File.WriteAllBytes("test_dct.jpg", hidden);
+JpegSurgery hiddenJpeg = new JpegSurgery("test_dct.jpg", degree);
+hiddenJpeg.tmpBeforeSave = jpeg.tmpBeforeSave;
 byte[] secret = hiddenJpeg.FindLSB(message.Length * 8);
 File.WriteAllBytes("findedMessage.txt", secret);
 Console.WriteLine(@"||||| Check |||||");
 Console.WriteLine("Equal: " + message.SequenceEqual(secret));
-Console.WriteLine("message bits: " + string.Join(" ", message.Take(10)));
-Console.WriteLine("message find: " + string.Join(" ", secret.Take(10)));
+Console.WriteLine("message bits: " + string.Join(" ", message.TakeLast(20)));
+Console.WriteLine("message find: " + string.Join(" ", secret.TakeLast(20)));
 
 return;
 
