@@ -2,29 +2,29 @@
 using System.Collections;
 using System.Drawing;
 using System.Drawing.Imaging;
-using Core;
+
+//Проект в черновом варианте
 
 
-//int t = -91;
-//Console.WriteLine(Convert.ToString(-91, 2));
+GifSurgery gifSurgery = new("gif.gif");
+gifSurgery.HideWithLSB(null);
+
+//int degree = 1;
+//JpegSurgery jpeg = new JpegSurgery("jpeg.jpg", degree);
+//byte[] message = File.ReadAllBytes("message.txt");
+//byte[] hidden = jpeg.HideWithLSB(message);
+////return;
+////File.WriteAllBytes("test_dct.jpg", hidden);
+//JpegSurgery hiddenJpeg = new JpegSurgery("test_dct.jpg", degree);
+//hiddenJpeg.tmpBeforeSave = jpeg.tmpBeforeSave;
+//byte[] secret = hiddenJpeg.FindLSB(message.Length * 8);
+//File.WriteAllBytes("findedMessage.txt", secret);
+//Console.WriteLine(@"||||| Check |||||");
+//Console.WriteLine("Equal: " + message.SequenceEqual(secret));
+//Console.WriteLine("message bits: " + string.Join(" ", message.TakeLast(20)));
+//Console.WriteLine("message find: " + string.Join(" ", secret.TakeLast(20)));
+
 //return;
-
-int degree = 1;
-JpegSurgery jpeg = new JpegSurgery("jpeg.jpg", degree);
-byte[] message = File.ReadAllBytes("message.txt");
-byte[] hidden = jpeg.HideWithLSB(message);
-//return;
-//File.WriteAllBytes("test_dct.jpg", hidden);
-JpegSurgery hiddenJpeg = new JpegSurgery("test_dct.jpg", degree);
-hiddenJpeg.tmpBeforeSave = jpeg.tmpBeforeSave;
-byte[] secret = hiddenJpeg.FindLSB(message.Length * 8);
-File.WriteAllBytes("findedMessage.txt", secret);
-Console.WriteLine(@"||||| Check |||||");
-Console.WriteLine("Equal: " + message.SequenceEqual(secret));
-Console.WriteLine("message bits: " + string.Join(" ", message.TakeLast(20)));
-Console.WriteLine("message find: " + string.Join(" ", secret.TakeLast(20)));
-
-return;
 
 //int degree = 3;
 //PngSurgery png = new PngSurgery("png.png", degree);

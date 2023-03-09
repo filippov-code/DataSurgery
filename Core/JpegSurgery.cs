@@ -24,7 +24,7 @@ namespace Core
             fileInfo = new FileInfo(path);
             bitmap = new Bitmap(path);
 
-            FreeSpace = bitmap.Width * bitmap.Height * 3;
+            //FreeSpace = bitmap.Width * bitmap.Height * 3;
 
             Degree = degree;
         }
