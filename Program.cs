@@ -1,13 +1,53 @@
 ﻿using Core;
 using System.Collections;
+using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Imaging;
+using System.Text;
 
 //Проект в черновом варианте
 
+int degree = 1;
+TiffSurgery png = new TiffSurgery("tiff.tiff", degree);
+byte[] message = File.ReadAllBytes("message.txt");
+byte[] hidden = png.HideWithLSB(message);
+File.WriteAllBytes("hidden.tiff", hidden);
+TiffSurgery hiddenTiff = new TiffSurgery("hidden.tiff", degree);
+byte[] secret = hiddenTiff.FindLSB(message.Length * 8);
+File.WriteAllBytes("secret.txt", secret);
+Console.WriteLine(@"\\\\\ Check /////");
+Console.WriteLine("Equal: " + message.SequenceEqual(secret));
+Console.WriteLine("message bits: " + string.Join(" ", message.Take(10)));
+Console.WriteLine("message find: " + string.Join(" ", secret.Take(10)));
 
-GifSurgery gifSurgery = new("gif.gif");
-gifSurgery.HideWithLSB(null);
+return;
+
+//int[] array = new int[10];
+//int[] elements = new int[] { 1, 2, 3, 4, 5, 6 };
+//var t = new TestSurgery();
+//t.ReplaceElementsInArray(array, elements, 4);
+//Console.WriteLine(string.Join(" ", array));
+
+//TestSurgery surgery = new TestSurgery();
+//byte[] container = new byte[2];
+//byte[] message = Encoding.UTF8.GetBytes("H");
+//Console.WriteLine("Contain before: " + string.Join(" ", container));
+//Console.WriteLine("Message before: " + string.Join(" ", message));
+//surgery.WriteMessageLSB(container, message, 4);
+//message = surgery.ReadMessageLSB(container, message.Length, 4);
+//Console.WriteLine("Contain after: " + string.Join(" ", container));
+//Console.WriteLine("Message after: " + string.Join(" ", message));
+//Console.WriteLine("Message: " + Encoding.UTF8.GetString(message));
+
+//int degree = 2;
+//GifSurgery gifSurgery = new("gif.gif", degree);
+//byte[] message = File.ReadAllBytes("message.txt");
+//var secretgif = gifSurgery.HideWithLSB(message);
+//File.WriteAllBytes("secret.gif", secretgif);
+//gifSurgery = new GifSurgery("secret.gif", degree);
+//byte[] secret = gifSurgery.FindLSB(message.Length * 8);
+//File.WriteAllBytes("secret.txt", secret);
+//return;
 
 //int degree = 1;
 //JpegSurgery jpeg = new JpegSurgery("jpeg.jpg", degree);
