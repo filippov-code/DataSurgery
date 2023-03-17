@@ -10,7 +10,7 @@ using System.Threading.Channels;
 using System.Threading.Tasks;
 using static System.Net.Mime.MediaTypeNames;
 
-namespace Core
+namespace Core.BitmapImage
 {
     public class PngSurgery
     {
@@ -50,10 +50,10 @@ namespace Core
                     int r = pixel.R;
                     for (int i = Degree - 1; i >= 0; i--)
                     {
-                         if (bitsIndex == messageBits.Length)
-                             break;
-                         
-                         r = SetBit(r, 7 - i, messageBits[bitsIndex++]);
+                        if (bitsIndex == messageBits.Length)
+                            break;
+
+                        r = SetBit(r, 7 - i, messageBits[bitsIndex++]);
                     }
                     int g = pixel.G;
                     for (int i = Degree - 1; i >= 0; i--)
@@ -81,10 +81,10 @@ namespace Core
                 return ms.ToArray();
             }
         }
-        
+
         private int SetBit(int value, int index, bool bit)
         {
-            int tempMask = 1 << (7 - index);
+            int tempMask = 1 << 7 - index;
             int result = value & ~tempMask;
             if (bit)
                 result |= tempMask;
@@ -111,7 +111,7 @@ namespace Core
                     {
                         if (bitsIndex == bitsCount)
                             break;
-                        
+
                         messageValues[bitsIndex++] = GetBit(pixel.R, 7 - i);
                     }
                     for (int i = Degree - 1; i >= 0; i--)
@@ -140,7 +140,7 @@ namespace Core
 
         public static bool GetBit(int value, int index)
         {
-            value >>= (7 - index);
+            value >>= 7 - index;
             return value % 2 == 1;
         }
     }

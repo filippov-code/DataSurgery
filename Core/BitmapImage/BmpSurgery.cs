@@ -1,12 +1,12 @@
 ﻿using Core.Interfaces;
 
-namespace Core
+namespace Core.BitmapImage
 {
     public class BmpSurgery : ISurgery
     {
         private FileInfo fileInfo;
         public readonly long FreeBytes;
-        
+
 
         public BmpSurgery(string path)
         {

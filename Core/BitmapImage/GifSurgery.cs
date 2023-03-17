@@ -6,7 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Core
+namespace Core.BitmapImage
 {
     public class GifSurgery : SurgeryBase
     {
@@ -44,9 +44,9 @@ namespace Core
             int[] temp = new int[1];
             sizeBits.CopyTo(temp, 0);
             int PIXELflag = temp[0];
-            Console.WriteLine("PIXEL flag: " + PIXELflag);
+            //Console.WriteLine("PIXEL flag: " + PIXELflag);
             int colorsCount = (int)Math.Pow(2, PIXELflag + 1);
-            Console.WriteLine("Colors count: " + colorsCount);
+            //Console.WriteLine("Colors count: " + colorsCount);
             byte[] bytesForWrite = bitmapBytes[13..(13 + colorsCount * 3)];
             //Console.WriteLine("Bytes to write: " + string.Join(" ", bytesForWrite));
             //Console.WriteLine("Check: " + (bytesForWrite.Length % 3 == 0));
@@ -56,13 +56,11 @@ namespace Core
             //bitmapBytes[13..(13 + colorsCount * 3)] = bytesForWrite;
             ReplaceElementsInArray(bitmapBytes, bytesForWrite, 13);
             return bitmapBytes;
-
-            return null;
         }
 
         private int SetBit(int value, int index, bool bit)
         {
-            int tempMask = 1 << (7 - index);
+            int tempMask = 1 << 7 - index;
             int result = value & ~tempMask;
             if (bit)
                 result |= tempMask;
@@ -85,9 +83,9 @@ namespace Core
             int[] temp = new int[1];
             sizeBits.CopyTo(temp, 0);
             int PIXELflag = temp[0];
-            Console.WriteLine("PIXEL flag: " + PIXELflag);
+            //Console.WriteLine("PIXEL flag: " + PIXELflag);
             int colorsCount = (int)Math.Pow(2, PIXELflag + 1);
-            Console.WriteLine("Colors count: " + colorsCount);
+            //Console.WriteLine("Colors count: " + colorsCount);
             byte[] bytesForWrite = bitmapBytes[13..(13 + colorsCount * 3)];
             return ReadMessageLSB(bytesForWrite, bitsCount / 8, Degree);
 
@@ -95,7 +93,7 @@ namespace Core
 
         public static bool GetBit(int value, int index)
         {
-            value >>= (7 - index);
+            value >>= 7 - index;
             return Math.Abs(value % 2) == 1;
         }
     }

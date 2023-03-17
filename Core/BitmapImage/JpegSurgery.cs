@@ -7,7 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Core
+namespace Core.BitmapImage
 {
     public class JpegSurgery
     {
@@ -37,15 +37,15 @@ namespace Core
             jpegDecompress.jpeg_stdio_src(fs);
             jpegDecompress.jpeg_read_header(true);
             BitMiracle.LibJpeg.Classic.jvirt_array<BitMiracle.LibJpeg.Classic.JBLOCK>[] components = jpegDecompress.jpeg_read_coefficients();
-            var YComponent = components[0].Access(0, bitmap.Height/8);
+            var YComponent = components[0].Access(0, bitmap.Height / 8);
             BitArray messageBits = new BitArray(message);
             int bitsIndex = 0;
-            for (int y = 0; y < bitmap.Height/8; y++) // some cycle
+            for (int y = 0; y < bitmap.Height / 8; y++) // some cycle
             {
                 if (bitsIndex == messageBits.Count)
                     break;
 
-                for (int x = 0; x < bitmap.Width/8; x++)
+                for (int x = 0; x < bitmap.Width / 8; x++)
                 {
                     if (bitsIndex == messageBits.Count)
                         break;
@@ -81,7 +81,7 @@ namespace Core
 
         private int SetBit(int value, int index, bool bit)
         {
-            int tempMask = 1 << (7 - index);
+            int tempMask = 1 << 7 - index;
             int result = value & ~tempMask;
             if (bit)
                 result |= tempMask;
@@ -128,7 +128,7 @@ namespace Core
 
         public static bool GetBit(int value, int index)
         {
-            value >>= (7 - index);
+            value >>= 7 - index;
             return Math.Abs(value % 2) == 1;
         }
     }

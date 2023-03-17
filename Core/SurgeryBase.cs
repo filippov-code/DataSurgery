@@ -11,7 +11,7 @@ namespace Core
 {
     public abstract class SurgeryBase
     {
-        public void WriteMessageLSB(byte[] container, byte[] message, int degree = 1)
+        public void WriteMessageLSB(byte[] container, byte[] message, int degree = 1, int increment = 1)
         {
             //Console.WriteLine(@"\\\\\ HideWithLSB /////");
             //Console.WriteLine("bytes message lenght: " + message.Length);
@@ -26,7 +26,7 @@ namespace Core
                 throw new ArgumentException("Container too small");
             //Console.WriteLine("bits message length: " + messageBits.Count);
             int messageBitsIndex = 0;
-            for (int containerIndex = 0; containerIndex < container.Length; containerIndex++)
+            for (int containerIndex = 0; containerIndex < container.Length; containerIndex+=increment)
             {
                 if (messageBitsIndex == messageBits.Length)
                     break;
@@ -40,11 +40,11 @@ namespace Core
             }
         }
 
-        public byte[] ReadMessageLSB(byte[] container, int outBytesCount, int degree = 1)
+        public byte[] ReadMessageLSB(byte[] container, int outBytesCount, int degree = 1, int increment = 1)
         {
             bool[] values = new bool[outBytesCount * 8];
             int messageBitsIndex = 0;
-            for (int containerIndex = 0; containerIndex < container.Length; containerIndex++)
+            for (int containerIndex = 0; containerIndex < container.Length; containerIndex+=increment)
             {
                 if (messageBitsIndex == values.Length)
                     break;
@@ -86,6 +86,46 @@ namespace Core
         {
             value >>= (7 - index);
             return value % 2 == 1;
+        }
+        //
+        //public byte[] CreateMETA(DSMD dsmd)
+        //{
+        //    if (dsmd.degree > 127 || degree < 0 ||
+        //        sizeInBytes > Math.Pow(2, 4 * 8) - 1 || sizeInBytes < 0)
+        //        throw new ArgumentException();
+
+        //    bool[] frmt = GetBitsWithInsignificantZeros((int)format, 5);
+        //    bool[] mthd = GetBitsWithInsignificantZeros((int)method, 4);
+        //    bool[] dgre = GetBitsWithInsignificantZeros(degree, 7);
+        //    bool[] mssz = GetBitsWithInsignificantZeros(sizeInBytes, 4 * 8);
+        //    bool[] hstl = new BitArray(hash.TakeLast(2).ToArray()).Cast<bool>().ToArray();
+        //    byte[] result = new byte[8];
+        //    new BitArray(frmt.Concat(mthd).Concat(dgre).Concat(mssz).Concat(hstl).ToArray()).CopyTo(result, 0);
+        //    return result;
+
+        //}
+        //public DSMD ReadMETA(byte[] meta)
+        //{
+
+        //}
+        public bool[] GetBitsWithInsignificantZeros(int value, int size)
+        {
+            string bitsString = Convert.ToString(value, 2);
+            if (bitsString.Length > size)
+                throw new ArgumentException();
+            return new bool[size - bitsString.Length]
+                .Concat(bitsString.Select(x => x == '0' ? false : true))
+                .ToArray();
+        }
+        //
+        public enum FileFormats
+        {
+            Bmp = 1, Gif, Jpeg, Png, Tiff, Wav
+        }
+
+        public enum SurgeryMethods
+        {
+            Lsb = 1
         }
     }
 }
