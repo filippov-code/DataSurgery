@@ -8,5 +8,8 @@ namespace Core.Interfaces
 {
     internal interface ISurgery
     {
+        int GetFreeSpace();
+        byte[] HideWithLSB(byte[] message);
+        byte[] FindLSB(int bytesCount);
     }
 }

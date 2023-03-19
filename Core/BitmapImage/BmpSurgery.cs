@@ -2,13 +2,13 @@
 
 namespace Core.BitmapImage
 {
-    public class BmpSurgery : ISurgery
+    public class BmpSurgery : SurgeryBase
     {
         private FileInfo fileInfo;
         public readonly long FreeBytes;
 
 
-        public BmpSurgery(string path)
+        public BmpSurgery(string path, int degree)
         {
             fileInfo = new FileInfo(path);
             FreeBytes = fileInfo.Length;

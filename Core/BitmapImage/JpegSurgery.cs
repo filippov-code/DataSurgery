@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace Core.BitmapImage
 {
-    public class JpegSurgery
+    public class JpegSurgery : SurgeryBase
     {
         private FileInfo fileInfo;
         private Bitmap bitmap;
@@ -29,7 +29,7 @@ namespace Core.BitmapImage
             Degree = degree;
         }
 
-        public byte[] HideWithLSB(byte[] message)
+        public override byte[] HideWithLSB(byte[] message)
         {
             Console.WriteLine("||||| HideWithLSB |||||");
             BitMiracle.LibJpeg.Classic.jpeg_decompress_struct jpegDecompress = new BitMiracle.LibJpeg.Classic.jpeg_decompress_struct();

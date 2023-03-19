@@ -6,11 +6,16 @@ using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Core.Interfaces;
 
 namespace Core
 {
-    public abstract class SurgeryBase
+    public abstract class SurgeryBase : ISurgery
     {
+        public abstract int FreeSpace{ get; }
+        public abstract byte[] HideWithLSB(byte[] message);
+        public abstract byte[] FindLSB(byte[] ciphre);
+
         public void WriteMessageLSB(byte[] container, byte[] message, int degree = 1, int increment = 1)
         {
             //Console.WriteLine(@"\\\\\ HideWithLSB /////");

@@ -28,7 +28,7 @@ namespace Core.BitmapImage
             Degree = degree;
         }
 
-        public byte[] HideWithLSB(byte[] message)
+        public override byte[] HideWithLSB(byte[] message)
         {
             byte[] bitmapBytes = File.ReadAllBytes(fileInfo.FullName);
             int a = bitmapBytes[10];
@@ -67,7 +67,7 @@ namespace Core.BitmapImage
             return result;
         }
 
-        public byte[] FindLSB(int bitsCount)
+        public override byte[] FindLSB(int bitsCount)
         {
             byte[] bitmapBytes = File.ReadAllBytes(fileInfo.FullName);
             int a = bitmapBytes[10];

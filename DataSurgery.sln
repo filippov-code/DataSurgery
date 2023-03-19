@@ -7,7 +7,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DataSurgery", "DataSurgery.
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Core", "Core\Core.csproj", "{6EF45C75-9158-46DC-A907-B8AF3C4ACDD3}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Encryption", "..\Encryption\Encryption.csproj", "{3C16A589-DF98-4AF6-8D1C-738D96124CDA}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Encryption", "..\Encryption\Encryption.csproj", "{3C16A589-DF98-4AF6-8D1C-738D96124CDA}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Presentation", "Presentation\Presentation.csproj", "{13793EE4-C7A6-4C8D-A6B7-6953681305BF}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -27,6 +29,10 @@ Global
 		{3C16A589-DF98-4AF6-8D1C-738D96124CDA}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3C16A589-DF98-4AF6-8D1C-738D96124CDA}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{3C16A589-DF98-4AF6-8D1C-738D96124CDA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{13793EE4-C7A6-4C8D-A6B7-6953681305BF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{13793EE4-C7A6-4C8D-A6B7-6953681305BF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{13793EE4-C7A6-4C8D-A6B7-6953681305BF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{13793EE4-C7A6-4C8D-A6B7-6953681305BF}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

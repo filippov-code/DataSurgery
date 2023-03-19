@@ -9,10 +9,10 @@ using System.Threading.Tasks;
 
 namespace Core.BitmapImage
 {
-    public class TiffSurgery : SurgeryBase
+    public sealed class TiffSurgery : BmpSurgery
     {
         private Bitmap bitmap;
-        public readonly int FreeSpace;
+        public override int FreeSpace { get; set; }
         public readonly int Degree;
 
         public TiffSurgery(string path, int degree = 1)
@@ -24,7 +24,7 @@ namespace Core.BitmapImage
             Degree = degree;
         }
 
-        public byte[] HideWithLSB(byte[] message)
+        public override byte[] HideWithLSB(byte[] message)
         {
             Console.WriteLine(@"\\\\\ HideWithLSB /////");
             Console.WriteLine("bytes message lenght: " + message.Length);

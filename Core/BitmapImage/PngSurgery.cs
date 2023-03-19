@@ -12,7 +12,7 @@ using static System.Net.Mime.MediaTypeNames;
 
 namespace Core.BitmapImage
 {
-    public class PngSurgery
+    public sealed class PngSurgery : BmpSurgery
     {
         private Bitmap bitmap;
         public readonly int FreeSpace;
@@ -27,7 +27,7 @@ namespace Core.BitmapImage
             Degree = degree;
         }
 
-        public byte[] HideWithLSB(byte[] message)
+        public override byte[] HideWithLSB(byte[] message)
         {
             Console.WriteLine(@"\\\\\ HideWithLSB /////");
             Console.WriteLine("bytes message lenght: " + message.Length);
@@ -91,7 +91,7 @@ namespace Core.BitmapImage
             return result;
         }
 
-        public byte[] FindLSB(int bitsCount)
+        public override byte[] FindLSB(int bitsCount)
         {
             Console.WriteLine(@"\\\\\ FindLSB /////");
             int bitsIndex = 0;
