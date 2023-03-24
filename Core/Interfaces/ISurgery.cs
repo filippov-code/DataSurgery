@@ -6,10 +6,15 @@ using System.Threading.Tasks;
 
 namespace Core.Interfaces
 {
-    internal interface ISurgery
+    public interface ISurgery
     {
-        int GetFreeSpace();
-        byte[] HideWithLSB(byte[] message);
-        byte[] FindLSB(int bytesCount);
+        long GetFreeSpace(int degree);
+        void AddWithLSB(byte[] message, int degree);
+        byte[] FindLSB(int bytesCount, int degree, int startIdnex);
+        void Save(string path);
+
+        //byte[] HideWithLSB(byte[] message);
+        //byte[] FindLSB(int bytesCount);
+        //byte[] ReadAllBytesLSB();
     }
 }

@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Presentation"
         mc:Ignorable="d"
-        Title="Data Surgery" Height="550" Width="400">
+        Title="Data Surgery" Height="650" Width="400">
     <TabControl>
         <TabItem Header="Спрятать">
             <Grid Margin="5, 0">
@@ -97,14 +97,15 @@
                         <ColumnDefinition/>
                     </Grid.ColumnDefinitions>
                     <Slider Grid.Column="0" x:Name="hide_degreeSlider" 
-                            Maximum="100" 
-                            Minimum="1" 
+                            Maximum="3" 
+                            Minimum="0" 
                             VerticalAlignment="Center"
                             IsSelectionRangeEnabled="True"
                             ValueChanged="Hide_degreeSlider_ValueChanged"/>
                     <TextBox Grid.Column="1" x:Name="hide_degreeValueTextBox"
                              VerticalContentAlignment="Center"
-                             IsReadOnly="True"/>
+                             IsReadOnly="True"
+                             Text="0"/>
                 </Grid>
                 <Grid Grid.Row="8">
                     <Grid.ColumnDefinitions>
@@ -136,8 +137,8 @@
                     </Grid.ColumnDefinitions>
                     <Label Grid.Column="0" Content="Пароль"/>
                     <TextBox Grid.Column="1" x:Name="hide_passwordTextBox"  VerticalAlignment="Center"/>
-                    <Label Grid.Column="2" x:Name="hide_ivTextBox" Content="IV"/>
-                    <TextBox Grid.Column="3" VerticalAlignment="Center"/>
+                    <Label Grid.Column="2" Content="IV"/>
+                    <TextBox Grid.Column="3" x:Name="hide_ivTextBox" VerticalAlignment="Center"/>
                 </Grid>
                 <Grid Grid.Row="12">
                     <Grid.ColumnDefinitions>
@@ -194,7 +195,7 @@
                         <ColumnDefinition Width="4*"/>
                         <ColumnDefinition/>
                     </Grid.ColumnDefinitions>
-                    <TextBox Grid.Column="0" x:Name="find_stegocontainerFilePathTextBox" Text="Path:/..." VerticalAlignment="Center"/>
+                    <TextBox Grid.Column="0" x:Name="find_stegoContainerFilePathTextBox" Text="Path:/..." VerticalAlignment="Center"/>
                     <Button Grid.Column="1" Content="Выбрать..." Click="Find_chooseStegocontainerButton_Click"/>
                 </Grid>
                 <Grid Grid.Row="2">
@@ -234,8 +235,8 @@
                     </Grid.ColumnDefinitions>
                     <Label Grid.Column="0" Content="Пароль"/>
                     <TextBox Grid.Column="1" x:Name="find_passwordTextBox" VerticalAlignment="Center"/>
-                    <Label Grid.Column="2" x:Name="find_ivTextBox" Content="IV"/>
-                    <TextBox Grid.Column="3" VerticalAlignment="Center"/>
+                    <Label Grid.Column="2" Content="IV"/>
+                    <TextBox Grid.Column="3" x:Name="find_ivTextBox" VerticalAlignment="Center"/>
                 </Grid>
                 <Grid Grid.Row="6">
                     <Grid.ColumnDefinitions>

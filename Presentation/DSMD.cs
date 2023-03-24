@@ -4,56 +4,71 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using static Core.SurgeryBase;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace Core
 {
     /// <summary>
     /// Data Surgery Meta Data
+    /// 
+    /// ABlock:
+    ///     method - 1 byte
+    ///     degree - 1 byte
+    ///     messageSize - 4 bytes
+    ///     hash - 2 bytes
+    ///     extensionSize - 1 byte
+    /// BBlock:
+    ///     extension
+    /// ----------------------------
+    /// Size = ABlock + BBlock = 9 bytes + BBlock
     /// </summary>
     public class DSMD
     {
-        public const int Size = 8;
-        public readonly FileFormats Format;
-        public readonly SurgeryMethods SurgeryMethod;
+        public const int Size = 9;
+        public static Encoding Encoding = Encoding.UTF8;
+        public readonly int ExtensionSize;
+        public readonly int SurgeryMethod;
         public readonly int Degree;
         public readonly int MessageSize;
         public readonly byte[] HashTail;
 
-        public DSMD(FileFormats format, SurgeryMethods method, int degree, int dataSizeInBytes, byte[] hash)
+        public DSMD(string extension, int method, int degree, int messageSize, byte[] hash)
         {
+            if (extension.Length > byte.MaxValue)
+                throw new ArgumentException("The file extension is too large");
             if (degree > 100 || degree < 0)
                 throw new ArgumentException("The degree must be between 0 and 100.");
-            if (dataSizeInBytes > Math.Pow(2, 4 * 8) - 1 || dataSizeInBytes < 0)
+            if (messageSize > Math.Pow(2, 4 * 8) - 1 || messageSize < 0)
                 throw new ArgumentException("The size cannot exceed 4GB");
-            if (hash.Length < 2)
-                throw new ArgumentException("The hash must contain at least 2 bytes");
 
-            Format = format;
             SurgeryMethod = method;
             Degree = degree;
-            MessageSize = dataSizeInBytes;
+            MessageSize = messageSize;
             HashTail = hash.TakeLast(2).ToArray();
+            ExtensionSize = Encoding.GetBytes(extension).Length;
         }
 
         public DSMD(byte[] data)
         {
             bool[] bits = new BitArray(data).Cast<bool>().ToArray();
-            bool[] frmt = bits[0..5];
-            bool[] mthd = bits[5..9];
-            bool[] dgre = bits[9..16];
+            bool[] mthd = bits[..8];
+            bool[] dgre = bits[8..16];
             bool[] mssz = bits[16..48];
             bool[] hstl = bits[48..64];
-            int format = (int)BitsToInt32(frmt);
-            int method = (int)BitsToInt32(mthd);
-            int degree = (int)BitsToInt32(dgre);
-            int messageSize = (int)BitsToInt32(mssz);
+            bool[] exsz = bits[64..72];
+
+
+            int method = BitsToInt32(mthd);
+            int degree = BitsToInt32(dgre);
+            int messageSize = BitsToInt32(mssz);
             byte[] hashTail = BitsToBytes(hstl);
-            Format = (FileFormats)format;
-            SurgeryMethod = (SurgeryMethods)method;
+            int extensionSize = BitsToInt32(exsz);
+
+            SurgeryMethod = method;
             Degree = degree;
             MessageSize = messageSize; 
             HashTail = hashTail;
+            ExtensionSize = extensionSize;
         }
         //LITTLE ENDIAN CONVERT
         private int BitsToInt32(bool[] bits)
@@ -71,15 +86,17 @@ namespace Core
             return result;
         }
 
-        public byte[] ToBytes()
+        public byte[] GetABlock()
         {
-            bool[] frmt = GetBitsWithInsignificantZeros((int)Format, 5);
-            bool[] mthd = GetBitsWithInsignificantZeros((int)SurgeryMethod, 4);
-            bool[] dgre = GetBitsWithInsignificantZeros(Degree, 7);
+            bool[] mthd = GetBitsWithInsignificantZeros(SurgeryMethod, 8);
+            bool[] dgre = GetBitsWithInsignificantZeros(Degree, 8);
             bool[] mssz = GetBitsWithInsignificantZeros(MessageSize, 4 * 8);
             bool[] hstl = new BitArray(HashTail).Cast<bool>().ToArray();
+            bool[] exsz = GetBitsWithInsignificantZeros(ExtensionSize, 8);
+
             byte[] result = new byte[Size];
-            new BitArray(frmt.Concat(mthd).Concat(dgre).Concat(mssz).Concat(hstl).ToArray()).CopyTo(result, 0);
+            bool[] resultBits = mthd.Concat(dgre).Concat(mssz).Concat(hstl).Concat(exsz).ToArray();
+            new BitArray(resultBits).CopyTo(result, 0);
             return result;
         }
 
