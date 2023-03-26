@@ -2,18 +2,16 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using Microsoft.Win32;
 using System.IO;
 using static Core.SurgeryBase;
 using Core;
-using System.Runtime.Intrinsics.Arm;
 using Encryption;
 using System.Security.Cryptography;
 using Core.Interfaces;
-using Core.Audio;
+using System.Windows.Media;
 using Core.BitmapImage;
 
 namespace Presentation
@@ -24,7 +22,8 @@ namespace Presentation
     public partial class MainWindow : Window
     {
         private string containerFileFilter = "JPEG Files (*.jpeg)|*.jpeg|PNG Files (*.png)|*.png|JPG Files (*.jpg)|*.jpg|GIF Files (*.gif)|*.gif|BMP Files (*.bmp)|*.bmp|WAV Files (*.wav)|*.wav|TIFF Files (*.tiff)|*.tiff";
-        private SurgeryBase? surgery;
+        private ISurgery hideSurgery;
+        private ISurgery findSurgery;
 
         public MainWindow()
         {
@@ -34,10 +33,29 @@ namespace Presentation
             hide_surgeryMethodComboBox.ItemsSource = availableMethods;
             hide_surgeryMethodComboBox.SelectedIndex = 0;
 
-            //DSMD dSMD = new DSMD("wavert", 1, 2, 1024, new byte[] { 1, 2});
-            //Log(dSMD.BBlockSize.ToString());
 
 
+        }
+        static int SetBit(int value, int index, bool bitValue)
+        {
+            int result = value;
+            int mask = 1 << index;
+            if (bitValue)
+                result |= mask;
+            else
+                result &= ~mask;
+            return result;
+        }
+
+        private void Hide_chooseMessageButton_Click(object sender, RoutedEventArgs e)
+        {
+            OpenFileDialog fileDialog = new OpenFileDialog();
+            bool? fileSelected = fileDialog.ShowDialog();
+            if (fileSelected == null || !fileSelected.Value)
+                return;
+
+            hide_messageFilePathTextBox.Text = fileDialog.FileName;
+            CheckMessageAndContainerSizes();
         }
 
         private void Hide_chooseContainerButton_Click(object sender, RoutedEventArgs e)
@@ -47,19 +65,9 @@ namespace Presentation
             bool? fileSelected = fileDialog.ShowDialog();
             if (fileSelected == null || !fileSelected.Value)
                 return;
-            hide_containerFilePathTextBox.Text = fileDialog.FileName;
-            string extension = Path.GetExtension(fileDialog.FileName);
-            //surgery = Helper.GetSurgery(extension, fileDialog.FileName, (int)hide_degreeSlider.Value);
-        }
 
-        private void Hide_chooseMessageButton_Click(object sender, RoutedEventArgs e)
-        {
-            OpenFileDialog fileDialog = new OpenFileDialog();
-            bool? fileSelected = fileDialog.ShowDialog();
-            if (fileSelected != null && fileSelected.Value)
-            {
-                hide_messageFilePathTextBox.Text = fileDialog.FileName;
-            }
+            hide_containerFilePathTextBox.Text = fileDialog.FileName;
+            CheckMessageAndContainerSizes();
         }
 
         private void Hide_chooseSavePathButton_Click(object sender, RoutedEventArgs e)
@@ -87,20 +95,37 @@ namespace Presentation
             //Hide_Log("rest2: " + string.Join(" ", rest2));
             //return;
 
+            //int[] con = { 1, 2, 3, 4, 5, 6, 7, 8 };
+            //Log(string.Join(" ", con));
+            //byte[] mes = { 1, 2 };
+            //Log(string.Join(" ", mes));
+            //BmpSurgery sur = new(@"F:\Programs\Microsoft Visual Studio\Projects\DataSurgery\bin\Debug\net6.0\bmp.bmp");
+            //sur.BytesForChange = con;
+            //sur.AddWithLSB(mes, 4);
+            //Log(string.Join(" ", sur.BytesForChange));
+            //Log(string.Join(" ", sur.FindLSB(2, 4, 0)));
+            //return;
 
+            Log("Сбор данных...");
             string containerPath = hide_containerFilePathTextBox.Text;
             string containerExtension = Path.GetExtension(containerPath);
             string messagePath = hide_messageFilePathTextBox.Text;
             string messageExtension = Path.GetExtension(messagePath);
             string savePath = hide_saveFilePathTextBox.Text;
-            int degree = int.Parse(hide_degreeValueTextBox.Text);
+            int degreeValue =  int.Parse(hide_degreeValueTextBox.Text);
+            int degree = (int)Math.Pow(2, degreeValue);
             string password = hide_passwordTextBox.Text;
             string iv = hide_ivTextBox.Text;
-            byte[] containerBytes = File.ReadAllBytes(containerPath);
+            //byte[] containerBytes = File.ReadAllBytes(containerPath);
             byte[] messageBytes = File.ReadAllBytes(messagePath);
+            Log("Создание Метатега...");
+            Log("Подготовка к шифрованию...");
             AES aes = new AES(password, iv);
             FPE fpe = new FPE(aes);
             byte[] messageEncrypted = aes.Encrypt(messageBytes);
+            //Log($"Encrypted message first: {string.Join(" ", messageEncrypted.Take(6).ToArray())}");
+            //Log($"Encrypted message length: {messageEncrypted.Length}");
+            //Log($"Encrypted message last: {string.Join(" ", messageEncrypted.TakeLast(6).ToArray())}");
             var dsmd = new DSMD(
                 messageExtension,
                 hide_surgeryMethodComboBox.SelectedIndex,
@@ -109,16 +134,19 @@ namespace Presentation
                 MD5.HashData(messageBytes)
             );
             byte[] dsmdABlock = dsmd.GetABlock();
-            Log($"hide dsmd dec: {string.Join(" ", dsmdABlock)}");
+            Log("Шифрование...");
+            //Log($"hide dsmd dec: {string.Join(" ", dsmdABlock)}");
             byte[] dsmdEncrypted = fpe.PrefixEncrypt(dsmdABlock);
-            Log($"hide dsmd enc: {string.Join(" ", dsmdEncrypted)}");
+            //Log($"hide dsmd enc: {string.Join(" ", dsmdEncrypted)}");
             byte[] extensionEncrypted = fpe.PrefixEncrypt(Encoding.UTF8.GetBytes(messageExtension));
-            ISurgery surgery = SurgeryFactory.GetSurgery(containerExtension, containerPath, degree);
+            ISurgery surgery = SurgeryFactory.GetSurgery(containerPath);
             surgery.AddWithLSB(dsmdEncrypted, 1);
+            Log("Прячем сообщение...");
             byte[] toWrite = extensionEncrypted.Concat(messageEncrypted).ToArray();
             surgery.AddWithLSB(toWrite, degree);
+            Log("Сохраняем...");
             surgery.Save(savePath + containerExtension);
-            Log("Done");
+            Log("Готово");
 
 
             //Log($"Container Length: {containerBytes.Length}");
@@ -166,51 +194,104 @@ namespace Presentation
         }
         public void Find_excecuteButton_Click(object sender, RoutedEventArgs e)
         {
-            try 
-            { 
-            string stegoContainerPath = find_stegoContainerFilePathTextBox.Text;
-            string stegoContainerExtension = Path.GetExtension(stegoContainerPath);
-            string savePath = find_saveFilePathTextBox.Text;
-            string password = find_passwordTextBox.Text;
-            string iv = find_ivTextBox.Text;
-            byte[] stegoContainerBytes = File.ReadAllBytes(stegoContainerPath);
-            AES aes = new AES(password, iv);
-            FPE fpe = new FPE(aes);
-            ISurgery surgery = SurgeryFactory.GetSurgery(stegoContainerExtension, stegoContainerPath, 1);
-            var dsmdEncrypted = surgery.FindLSB(9, 1, 0);
-            Log($"find dsmd enc: {string.Join(" ", dsmdEncrypted)}");
-            var dsmdDecrypted = fpe.PrefixDecrypt(dsmdEncrypted);
-            Log($"find dsmd dec: {string.Join(" ", dsmdDecrypted)}");
-            var dsmd = new DSMD(dsmdDecrypted);
-            Log($"degree: {dsmd.Degree}");
-            Log($"extension length: {dsmd.ExtensionSize}");
-            Log($"method: {dsmd.SurgeryMethod}");
-            Log($"message size: {dsmd.MessageSize}");
-            string extension = DSMD.Encoding.GetString(surgery.FindLSB(dsmd.ExtensionSize, dsmd.Degree, 9 * 8));
-            Log($"extension: {extension}");
-            byte[] encryptedMessage = surgery.FindLSB(dsmd.MessageSize, dsmd.Degree, 9*8 + dsmd.ExtensionSize * 8 / dsmd.Degree);
-            
+            try
+            {
+                Log("Сбор данных...");
+                string stegoContainerPath = find_stegoContainerFilePathTextBox.Text;
+                string savePath = find_saveFilePathTextBox.Text;
+                string password = find_passwordTextBox.Text;
+                string iv = find_ivTextBox.Text;
+                byte[] stegoContainerBytes = File.ReadAllBytes(stegoContainerPath);
+                Log("Полготовка к расшифровке...");
+                AES aes = new AES(password, iv);
+                FPE fpe = new FPE(aes);
+                ISurgery surgery = SurgeryFactory.GetSurgery(stegoContainerPath);
+                var dsmdEncrypted = surgery.FindLSB(DSMD.Size, 1, 0);
+
+                Log("Расшифровка...");
+                var dsmdDecrypted = fpe.PrefixDecrypt(dsmdEncrypted);
+                //Log($"find dsmd dec: {string.Join(" ", dsmdDecrypted)}");
+                //Log($"find dsmd enc: {string.Join(" ", dsmdEncrypted)}");
+                Log("Парсинг Метатега...");
+                var dsmd = new DSMD(dsmdDecrypted);
+                //Log($"Degree: {dsmd.Degree}");
+                //Log($"Extension length: {dsmd.ExtensionSize}");
+                //Log($"Method: {dsmd.SurgeryMethod}");
+                //Log($"Message size: {dsmd.MessageSize}");
+                byte[] encryptedExtension = surgery.FindLSB(dsmd.ExtensionSize, dsmd.Degree, DSMD.Size * 8);
+                byte[] decryptedExtension = fpe.PrefixDecrypt(encryptedExtension);
+                string extension = DSMD.Encoding.GetString(decryptedExtension);
+                //Log($"Extension: {extension}");
+                Log("Получаем сообщение...");
+                byte[] encryptedMessage = surgery.FindLSB(dsmd.MessageSize, dsmd.Degree, DSMD.Size * 8 + dsmd.ExtensionSize * 8 / dsmd.Degree);
+                //Log($"Encrypted message first: {string.Join(" ", encryptedMessage.Take(6).ToArray())}");
+                //Log($"Encrypted message length: {encryptedMessage.Length}");
+                //Log($"Encrypted message last: {string.Join(" ", encryptedMessage.TakeLast(6).ToArray())}");
                 byte[] message = aes.Decrypt(encryptedMessage);
 
                 //if (MD5.HashData(message).TakeLast(2).SequenceEqual(dsmd.HashTail))
                 //    Log(i.ToString());
 
+                Log("Сохраняем...");
                 File.WriteAllBytes(savePath + "." + extension, message);
+                Log("Готово...");
             }
             catch (Exception ex)
             {
                 Log($"Не удалось расшифровать: {ex.Message}");
-                throw;
+                //throw;
             }
         }
 
         #region UIElements
+        private bool CheckMessageAndContainerSizes()
+        {
+            string messagePath = hide_messageFilePathTextBox.Text;
+            string containerPath = hide_containerFilePathTextBox.Text;
+            long messageSize = 0, freeSpace = 0;
+            if (File.Exists(messagePath))
+            {
+                FileInfo fileInfo = new FileInfo(messagePath);
+                messageSize = fileInfo.Length + 16 - fileInfo.Length % 16 + DSMD.Size;
+                WriteTextInTextBlock(hide_messagePathInfoTextBlock, $"Суммарный размер: {messageSize} байт", Brushes.Gray);
+            }
+            if (File.Exists(containerPath))
+            {
+                hideSurgery = SurgeryFactory.GetSurgery(containerPath);
+                int degree = (int)Math.Pow(2, int.Parse(hide_degreeValueTextBox.Text));
+                freeSpace = hideSurgery.GetFreeSpace(degree);
+                WriteTextInTextBlock(hide_containerPathInfoTextBlock, $"Доступное место: {freeSpace} байт", Brushes.Gray);
+            }
+            if (messageSize > 0 && freeSpace > 0)
+            {
+                bool enoughtSpace = messageSize <= freeSpace;
+                WriteTextInTextBlock(hide_messagePathInfoTextBlock, null, enoughtSpace ? Brushes.Green : Brushes.Red);
+                WriteTextInTextBlock(hide_containerPathInfoTextBlock, null, enoughtSpace ? Brushes.Green : Brushes.Red);
+                return enoughtSpace;
+            }
+            return false;
+
+        }
+        private void WriteTextInTextBlock(TextBlock textBlock, string text, Brush textColor)
+        {
+            if (text != null)
+            {
+                textBlock.Text = text;
+            }
+            if (textColor != null)
+            {
+                textBlock.Foreground = textColor;
+            }
+        }
         private void Hide_degreeSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
         {
+            if (!IsInitialized)
+                return;
+
             Slider slider = (Slider)sender;
             slider.SelectionEnd = e.NewValue;
-            if (IsInitialized)
-                hide_degreeValueTextBox.Text = Math.Round(e.NewValue).ToString();
+            hide_degreeValueTextBox.Text = Math.Round(e.NewValue).ToString();
+            CheckMessageAndContainerSizes();
         }
 
         public void Log(string log)

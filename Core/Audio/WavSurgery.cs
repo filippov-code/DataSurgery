@@ -10,19 +10,12 @@ namespace Core.Audio
 {
     public class WavSurgery : BitsSurgeryBase
     {
-        private FileInfo fileInfo;
         private byte[] fileBytes;
         private int startDataIndex;
-        public byte[] dataBlock;
-        //private readonly int degree;
-        //public override int Degree => degree;
 
-        public WavSurgery(string path, int degree = 1)
+        public WavSurgery(string path)
         {
-            fileInfo = new FileInfo(path);
-            //this.degree = degree;
-
-            fileBytes = File.ReadAllBytes(fileInfo.FullName);
+            fileBytes = File.ReadAllBytes(path);
             startDataIndex = 0;
             for (int i = 0; i < fileBytes.Length - 4; i++)
             {
@@ -39,37 +32,14 @@ namespace Core.Audio
             if (startDataIndex == 0)
                 throw new Exception("'data' block not found.");
 
-            BytesForChange = fileBytes[startDataIndex..];
-        }
-
-        public override long GetFreeSpace(int degree)
-        {
-            return dataBlock.Length * degree / 2;
+            BytesForChange = fileBytes[startDataIndex..].Select(x => (int)x).ToArray();
         }
 
         public override void Save(string path)
         {
             byte[] result = fileBytes[..];
-            Buffer.BlockCopy(BytesForChange, 0, result, startDataIndex, BytesForChange.Length);
+            Buffer.BlockCopy(BytesForChange.Select(x => (byte)x).ToArray(), 0, result, startDataIndex, BytesForChange.Length);
             File.WriteAllBytes(path, result);
         }
-
-        //public override byte[] HideWithLSB(byte[] message)
-        //{
-        //    WriteMessageInBytesLSB(dataBlock, message, Degree, 2);
-        //    Buffer.BlockCopy(dataBlock, 0, fileBytes, startDataIndex, dataBlock.Length);
-        //    //ReplaceElementsInArray(file, dataBlock, startDataIndex);
-        //    return fileBytes;
-        //}
-
-        //public override byte[] FindLSB(int bytesCount)
-        //{
-        //    return ReadMessageFromBytesLSB(dataBlock, bytesCount, Degree, 2);
-        //}
-
-        //public override byte[] ReadAllBytesLSB()
-        //{
-        //    return ReadAllBytesFrombytesLSB(dataBlock, Degree, 2);
-        //}
     }
 }

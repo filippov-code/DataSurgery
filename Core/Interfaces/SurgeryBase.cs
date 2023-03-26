@@ -12,16 +12,12 @@ namespace Core
 {
     public abstract class SurgeryBase : ISurgery
     {
-        //public abstract int Degree { get; }
-        protected byte[] BytesForChange;
+        public int[] BytesForChange;
         protected int ChangeIndex = 0;
-        public abstract long GetFreeSpace(int degree);
-
-        //public abstract byte[] HideWithLSB(byte[] message);
-
-        //public abstract byte[] FindLSB(int bytesCount);
-
-        //public abstract byte[] ReadAllBytesLSB();
+        public virtual long GetFreeSpace(int degree)
+        {
+            return (BytesForChange.Length - ChangeIndex) * degree / 8;
+        }
 
         public void AddWithLSB(byte[] message, int degree)
         {
@@ -29,11 +25,11 @@ namespace Core
             for (int i = 0; i < messageBits.Count / degree; i++)
             {
                 if (ChangeIndex == BytesForChange.Length)
-                    break;
+                    throw new ArgumentException("Space not enought");
 
                 for (int j = 0; j < degree; j++)
                 {
-                    BytesForChange[ChangeIndex] = SetBit(BytesForChange[ChangeIndex], 7 - j, messageBits[i * degree + j]);
+                    BytesForChange[ChangeIndex] = SetBit(BytesForChange[ChangeIndex], j, messageBits[i * degree + j]);
                 }
                 ChangeIndex++;
             }
@@ -53,7 +49,7 @@ namespace Core
                     if (bitsIndex == values.Length)
                         break;
 
-                    values[bitsIndex++] = GetBit(BytesForChange[i], 7 - j);
+                    values[bitsIndex++] = GetBit(BytesForChange[i], j);
                 }
             }
             byte[] result = new byte[bytesCount];
@@ -64,18 +60,20 @@ namespace Core
 
         public abstract void Save(string path);
 
-        protected static byte SetBit(byte value, int index, bool bit)
+        public static int SetBit(int value, int index, bool bitValue)
         {
-            int tempMask = 1 << (7 - index);
-            int result = value & ~tempMask;
-            if (bit)
-                result |= tempMask;
-            return (byte)result;
+            int result = value;
+            int mask = 1 << index;
+            if (bitValue)
+                result |= mask;
+            else
+                result &= ~mask;
+            return result;
         }
 
-        protected static bool GetBit(byte value, int index)
+        public static bool GetBit(int value, int index)
         {
-            value >>= (7 - index);
+            value >>= index;
             return Math.Abs(value % 2) == 1;
         }
 
