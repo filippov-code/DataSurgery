@@ -10,7 +10,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 
-namespace Presentation;
+namespace Presentation.WPF;
 
 /// <summary>
 /// Логика взаимодействия для MainWindow.xaml
